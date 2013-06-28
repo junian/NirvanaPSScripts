@@ -39,7 +39,7 @@ var welcomeStr = "Welcome to the Nirvana Asset Generator\nProudly presented by j
 
 charaNameInJapan = prompt(welcomeStr + "\nNama karakter dalam font jepang?", activeDoc.name);
 var lvlStr = prompt("Berapakah Level Maksimal Kartu ini?", 4);
-maxLevel = parseInt(lvlStr);
+maxLevel = Math.min(4, parseInt(lvlStr));
 
 //var rootPath = app.activeDocument.path + "/" + charaNameInJapan;
 var rootPath = Folder.myDocuments + "/" + charaNameInJapan;
