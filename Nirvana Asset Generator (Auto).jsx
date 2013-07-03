@@ -1,4 +1,7 @@
 ﻿//app.activeDocument.duplicate("coba");
+var DEBUG = false;
+var AUTO_CLOSE = true;
+
 var sp = "sp";
 var fp = "fp"
 var charaNameInJapan = "";
@@ -93,6 +96,10 @@ function generateNirvanaAsset() {
     } else {
         if (!confirm(aboutFile + "Apakah ini kartu _l, _m, _s_on, dan _body?"))
             return;
+        if(AUTO_CLOSE)
+        {
+            doc.close(SaveOptions.DONOTSAVECHANGES);
+        }
         for (var a = 0; a < filePostfix.length; a++) {
             doc = activeDoc.duplicate(charaNameInJapan);
             doc.resizeImage(fileSpSize[a][0], fileSpSize[a][1], doc.resolution, ResampleMethod.BICUBIC);
@@ -108,6 +115,10 @@ function generateSpFpImages(doc, postfix) {
     generateJpegs(doc, sp, postfix);
     doc.resizeImage("50 %", "50 %", doc.resolution, ResampleMethod.BICUBIC);
     generateJpegs(doc, fp, postfix);
+    if(AUTO_CLOSE)
+    {
+        doc.close(SaveOptions.DONOTSAVECHANGES);
+    }
 }
 
 function generateJpegs(doc, typesize, postfix) {
@@ -126,40 +137,61 @@ function generateJpegs(doc, typesize, postfix) {
         }
 
         //confirm(saveFile.length);
+        var savePath = rootPath + "/" + levelFolderNames[i] + "/" + typesize + "/" + charaNameInJapan + levelNames[i] + postfix + ".jpg";
         saveAsJpeg(
             doc,
-            rootPath + "/" + levelFolderNames[i] + "/" + typesize + "/" + charaNameInJapan + levelNames[i] + postfix + ".jpg",
-            fileSizeLimit[typesize][postfix]);
+            savePath,
+            fileSizeLimit[typesize][postfix],
+            typesize);
     }
 }
 
-function saveAsJpeg(doc, filePath, limitSize) {
+function saveAsJpeg(doc, filePath, limitSize, typesize) {
     var min = 1;
     var max = 100;
     var mid = Math.floor((max+min)/2);
-    alert(limitSize);
-    while(min < max)
+    //alert(limitSize);
+    var i = 1;
+    for(i=1;i<=100;i++)
     {
-        mid = Math.floor((max+min)/2);
-        var file = saveJpeg(doc, filePath, mid);
-        if(file.length < limitSize)
+        var f = saveJpeg(doc, filePath, i);
+        if(f.length > limitSize)
         {
-            min = mid;
-        }
-        else if(file.length > limitSize)
-        {
-            max = mid;
-        }
-        else
+            f = saveJpeg(doc, filePath, i-1);
+            if(f.length < bottomLimit(limitSize) && typesize == sp)
+            {
+                if(DEBUG)
+                {
+                    alert("SP nih");
+                }
+                f = saveJpeg(doc, filePath, i);
+            }
+            if(DEBUG)
+            {
+                alert(f.length + ", " + limitSize + ", " + bottomLimit(limitSize));
+            }
             break;
+        }
     }
+}
+
+function bottomLimit(limitSize)
+{
+    if(limitSize <= sizeInKB(5))
+    {
+        return limitSize - sizeInKB(0.3);
+    }
+    return limitSize - sizeInKB(0.5);
 }
 
 function saveJpeg(doc, filePath, quality){
     var options = new ExportOptionsSaveForWeb();
     options.format = SaveDocumentType.JPEG;
     options.optimized = true;
+    options.interlaced = false;
     options.quality = quality;
+    options.blur = 0.0;
+
     options.includeProfile = false;
     var saveFile = new File(filePath);
     doc.exportDocument(
