@@ -1,4 +1,8 @@
 ﻿//app.activeDocument.duplicate("coba");
+app.preferences.rulerUnits = Units.PIXELS;
+app.preferences.typeUnits = TypeUnits.PIXELS;
+app.displayDialogs = DialogModes.NO
+
 var DEBUG = false;
 var AUTO_CLOSE = true;
 
@@ -111,21 +115,12 @@ function generateNirvanaAsset() {
     alert("File berhasil di-generate di:\n" + rootPath);
 }
 
-function generateSpFpImages(doc, postfix) {
-    generateJpegs(doc, sp, postfix);
-    doc.resizeImage("50 %", "50 %", doc.resolution, ResampleMethod.BICUBIC);
-    generateJpegs(doc, fp, postfix);
-    if(AUTO_CLOSE)
-    {
-        doc.close(SaveOptions.DONOTSAVECHANGES);
-    }
-}
-
-function generateJpegs(doc, typesize, postfix) {
+function preGeneratedJpegs(postfix)
+{
     for (var i = 0; i <= maxLevel; i++) {
         for (var j = 0; j < layerLevelNames.length; j++) {
             try {
-                var layer = doc.artLayers.getByName(layerLevelNames[j]);
+                var layer = activeDoc.artLayers.getByName(layerLevelNames[j]);
                 if (i == j)
                     layer.visible = true;
                 else
@@ -137,12 +132,40 @@ function generateJpegs(doc, typesize, postfix) {
         }
 
         //confirm(saveFile.length);
+        var savePath = rootPath + "/" + levelFolderNames[i] + "/" + sp + "/" + charaNameInJapan + levelNames[i] + postfix + ".jpg";
+        saveJpeg(activeDoc, savePath, 100);
+        var savePath = rootPath + "/" + levelFolderNames[i] + "/" + fp + "/" + charaNameInJapan + levelNames[i] + postfix + ".jpg";
+        saveJpeg(activeDoc, savePath, 100);
+    }
+}
+
+function generateSpFpImages(doc, postfix) {
+    app.activeDocument = activeDoc;
+    preGeneratedJpegs(postfix);
+    app.activeDocument = doc;
+    generateJpegs(doc, sp, postfix);
+    doc.resizeImage("50 %", "50 %", doc.resolution, ResampleMethod.BICUBIC);
+    generateJpegs(doc, fp, postfix);
+    if(AUTO_CLOSE)
+    {
+        doc.close(SaveOptions.DONOTSAVECHANGES);
+    }
+}
+
+function generateJpegs(doc, typesize, postfix) {
+    for (var i = 0; i <= maxLevel; i++) {
+        //confirm(saveFile.length);
         var savePath = rootPath + "/" + levelFolderNames[i] + "/" + typesize + "/" + charaNameInJapan + levelNames[i] + postfix + ".jpg";
+        var jpegDoc = open(File(savePath));
+        //if(DEBUG)
+            //alert(doc.width + ", " + doc.height);
+        jpegDoc.resizeImage(doc.width, doc.height, jpegDoc.resolution, ResampleMethod.BICUBIC);
         saveAsJpeg(
-            doc,
+            jpegDoc,
             savePath,
             fileSizeLimit[typesize][postfix],
             typesize);
+        jpegDoc.close(SaveOptions.DONOTSAVECHANGES);
     }
 }
 
