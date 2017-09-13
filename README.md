@@ -1,5 +1,7 @@
 # NirvanaPSScripts
 
+**abandoned** *since there is no psd image example could be used, this code won't work. I put this here just for educational purpose.*
+
 Photoshop plugin I created for cutting .psd asset into separates .jpg
 
 ## LICENSE
